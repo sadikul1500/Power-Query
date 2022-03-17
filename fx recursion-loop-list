@@ -1,0 +1,17 @@
+//loop, recursion 
+
+(loops as number, temp as number,branch as number, lat as number, optional result as list) as list=>
+let
+    loops = loops + 1,
+    temp = temp + 1,
+    arr = if result = null then {lat} else result,
+    x = if temp=5 then 0 else temp,  
+    arr2= if loops = branch then arr
+        else
+            if x = 1 or x = 4 then List.Combine({arr,{lat + loops * 0.01}})
+            else List.Combine({arr,{lat - loops * 0.01}})
+   
+               
+           
+in
+    if loops=branch then arr2 else loop(loops,x,branch,lat,arr2)
