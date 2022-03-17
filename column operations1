@@ -1,0 +1,21 @@
+let
+    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i45WCi1Q0lEyNDAwAFLmSrE60Uou+eV5QI4pWMhYKTYWAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Criteria = _t, Amount = _t, Month = _t]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Criteria", type text}, {"Amount", Int64.Type}, {"Month", Int64.Type}}),
+    #"Add Amount2" = Table.AddColumn(#"Changed Type", "Amount2", each [Amount]-100),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Add Amount2", {"Amount2", Int64.Type}),
+    #"Added x" = Table.AddColumn(#"Changed Type1", "x", each List.Numbers([Amount]-5, 5, 2)),
+    #"Added y" = Table.AddColumn(#"Added x", "y", each List.Numbers([Amount2]-5, 5, 2)),
+    #"Added Custom" = Table.AddColumn(#"Added y", "Custom", each Table.FromColumns({[x], [y]})),
+    #"Expanded Custom" = Table.ExpandTableColumn(#"Added Custom", "Custom", {"Column1", "Column2"}, {"Custom.Column1", "Custom.Column2"}),
+    #"Removed Columns" = Table.RemoveColumns(#"Expanded Custom",{"x", "y"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns",{"Custom.Column2", "Custom.Column1"}),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Custom.Column2", Int64.Type}, {"Custom.Column1", Int64.Type}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type2",{{"Custom.Column2", "first"}, {"Custom.Column1", "second"}})
+    //#"Changed Type2" = Table.TransformColumnTypes(#"Changed Type1", {{"Amount2", type text}, {"Amount", type text}}),
+    //#"Merged Cloumn" = Table.AddColumn(#"Changed Type2", "Merged", each [Amount] & " " & [Amount2]),
+    //#"Merged Cloumn" = Table.AddColumn(#"Added y", "Merged", each [x] & " " & [y])
+    //#"changed Type3" = Table.TransformColumnTypes(#"Merged Cloumn", {{"Amount2", Int64.Type}, {"Amount", Int64.Type}}),
+    //#"Split Column by Delimiter" = Table.SplitColumn(#"changed Type3", "Merged", Splitter.SplitTextByDelimiter(" ", QuoteStyle.Csv), {"Merged.1", "Merged.2"}),
+    //#"Changed Type3" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Merged.1", Int64.Type}, {"Merged.2", Int64.Type}})
+in
+    #"Renamed Columns"
