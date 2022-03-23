@@ -1,0 +1,11 @@
+let
+Source = (Address as text) => let
+Source = Json.Document(Web.Contents("https://maps.googleapis.com/maps/api/geocode/json?address=" & Address & "&key=" & MYAPIKey)),
+results = Source[results],
+results1 = results{0},
+geometry = results1[geometry],
+location = geometry[location]
+in
+location
+in
+Source
