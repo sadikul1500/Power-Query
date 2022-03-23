@@ -1,0 +1,17 @@
+let
+    pointLookUp = (address as text)=>
+let
+    Source = Xml.Tables(Web.Contents("http://dev.virtualearth.net/REST/v1/Locations/"&address&"?o=xml&key=AkvK1ufPgJHRWo9r2uWOMrzqCE0qiGy_srdNenC1qrI-ks0NaN8exwBO7JK4HHIr")),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Copyright", type text}, {"BrandLogoUri", type text}, {"StatusCode", Int64.Type}, {"StatusDescription", type text}, {"AuthenticationResultCode", type text}, {"TraceId", type text}}),
+    ResourceSets = #"Changed Type"{0}[ResourceSets],
+    ResourceSet = ResourceSets{0}[ResourceSet],
+    #"Changed Type1" = Table.TransformColumnTypes(ResourceSet,{{"EstimatedTotal", Int64.Type}}),
+    Resources = #"Changed Type1"{0}[Resources],
+    Location = Resources{0}[Location],
+    #"Changed Type2" = Table.TransformColumnTypes(Location,{{"Name", type text}, {"EntityType", type text}, {"Confidence", type text}, {"MatchCode", type text}}),
+    Point = #"Changed Type2"{0}[Point],
+    #"Changed Type3" = Table.TransformColumnTypes(Point,{{"Latitude", type number}, {"Longitude", type number}})
+in
+    #"Changed Type3"
+in 
+    pointLookUp
