@@ -1,0 +1,18 @@
+(Address as text)=>
+let
+	Source = Json.Document(Web.Contents("https://maps.googleapis.com/maps/api/geocode/json?address="&Address&"&key=AIzaSyB8-etjD7RCHnm6atiyfYttOvp9yh2i8zQ")),
+	Source1 = try Source{0} otherwise [], 
+	#"Converted to Table1" = Record.ToTable(Source1),
+	#"Transposed Table" = Table.Transpose(#"Converted to Table1"),
+	#"Promoted Headers" = Table.PromoteHeaders(#"Transposed Table", [PromorteAllScalars=true]),
+	results = #"Promoted Headers"{0}[results],
+	results1 = results{0},
+	geometry = results1[geometry],
+	location = geometry[location],
+	#"Converted to Table" = Record.ToTable(location),
+	#"Transposed Table1" = Table.Transpose(#"Converted to Table"),
+	#"Promoted Headers1" = Table.PromoteHeaders(#"Transposed Table1", [PromorteAllScalars=true]),
+	#"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers1", {{"lat", type number}, {"lng", type number}}),
+	#"Renamed Columns" = Table.RenameColumns(#"Changed Type", {{"lat", "Latitude"}, {"lng", "Longitude"}})
+in	
+	#"Renamed Columns"
