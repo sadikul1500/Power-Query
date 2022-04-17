@@ -1,0 +1,105 @@
+function: fGeocode
+
+(Address as text)=>
+let
+	Source = Json.Document(Web.contents("https://maps.googleapis.com/maps/api/geocode/json?address="&Address&"&key="&ApiKey&"")),
+	#"Converted to Table1" = Record.ToTable(Source),
+	#"Transposed Table" = Table.Transpose(#"Converted to Table1"),
+	#"Promoted Headers" = Table.promotedheaders(#"Transposed Table", [PromorteAllScalars=true]),
+	results = #"Promoted Headers"{0}[results],
+	results1 = results{0},
+	geometry = results1[geometry],
+	location = geometry[location],
+	#"Converted to Table" = Record.ToTable(location),
+	#"Transposed Table1" = Table.Transpose(#"Converted to Table"),
+	#"Promoted Headers1" = Table.PromoteHeaders(#"Transposed Table1", [PromorteAllScalars=true]),
+	#"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers1", {{"lat", type number}, {"lng", type number}}),
+	#"Renamed Columns" = Table.RenameColumns(#"Changed Type", {{"lat", "Latitude"}, {"lng", "Longitude"}})
+in	
+	#"Renamed Columns"
+	
+	
+
+
+#delivery days column (new column)
+Delivery days = int(sales[delivery date] - sales[order date])
+
+#avg delivery days (new measure)
+Avg delivery days = Averagex(Sales, sales[delivery date] - sales[order date])
+
+#avg delivery days with filter (new measure)
+#because only online store has delivery days
+Avg delivery days = Averagex(filter(Sales, related(store[name])= "Online store"), sales[delivery date] - sales[order date])
+
+#avg delivery days with filter (new measure) using calculate
+#same result.. calculate is better than usinf filter
+Avg delivery days = Calculate(Averagex(sales, sales[delivery date] - sales[order date]),store[name]="Online store")
+
+#avg delivery days with filter (new measure) using calculate
+#using group by because in the table one order item has multiple entries
+Avg delivery days = Calculate(
+						Averagex( 
+							Summarize(
+								Sales, 
+								Sales[order number], 
+								sales[delivery date], 
+								sales[order date]
+								),
+							sales[delivery date] - sales[order date]
+						),
+						store[name]="Online store"
+					)
+					
+
+
+#number of online orders
+No. of Orders = Calculate(DISTINCTCOUNT(Sales[Order Number]),Store[Name]="Online store")
+
+
+#no of all orders
+No. of All Orders = Calculate(DISTINCTCOUNT(Sales[Order Number]),Store[Name]="Online store", 
+                                        REMOVEFILTERS(Sales[Delivery days]))
+
+#percentage of order number
+Percentage Order = DIVIDE([#Orders], Sales[#All Orders])
+
+#deliveries till 3rd day
+Pct 3 days = Calculate(Sales[Percentage Order], Sales[Delivery days] <= 3)
+
+#new table 
+Days = {1,3,5,7,10,15}
+
+#by default the column name is Value. change the name
+Days = Selectcolumns({1,3,5,7,10,15},"Days", [Value])
+
+#deliveries till x th day
+Pct x days = 
+    Var x = SELECTEDVALUE(Days[Days])
+    var result = CALCULATE(
+        Sales[Percentage Order],Sales[Delivery Days] <= x
+    )
+    return result
+	
+
+#return result less than 1
+Pct x days = 
+    Var x = SELECTEDVALUE(Days[Days])
+    var result = CALCULATE(
+        Sales[Percentage Order],Sales[Delivery Days] <= x
+    )
+    return if(result<1, result)
+	
+	
+	
+#show 100 only once	
+Pct x days = 
+    Var x = SELECTEDVALUE(Days[Days])
+    var result = CALCULATE(
+        Sales[Percentage Order],Sales[Delivery Days] <= x
+    )
+    var prevDay = Calculate(Max(Days[days]), Days[Days]<x)
+    var prevResult = CALCULATE(
+        Sales[Percentage Order],Sales[Delivery Days] <= prevDay
+    )
+    return if(prevResult < 1, result)
+
